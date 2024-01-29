@@ -1,32 +1,21 @@
 const app = require("express")();
-
-let chrome = {};
-let puppeteer;
-
-if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-  chrome = require("chrome-aws-lambda");
-  puppeteer = require("puppeteer-core");
-} else {
-  puppeteer = require("puppeteer");
-}
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
 
 app.get("/api", async (req, res) => {
-  let options = {};
-
-  if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-    options = {
-      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-      defaultViewport: chrome.defaultViewport,
-      executablePath: await chrome.executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true,
-    };
-  }
-
   try {
-    let browser = await puppeteer.launch(options);
-
-    let page = await browser.newPage();
+    const browser = await puppeteer.launch({
+      // args: chromium.args,
+      args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(
+        `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`
+      ),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
+    });
+  
+    const page = await browser.newPage();
     await page.goto("https://www.mamedica.co.uk/repeat-prescription/");
     await page.waitForSelector('#field_3_31')
     await page.click('#label_3_31_0');
