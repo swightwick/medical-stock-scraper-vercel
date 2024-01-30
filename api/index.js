@@ -2,7 +2,6 @@ const app = require("express")();
 const chromium = require('@sparticuz/chromium-min');
 const puppeteer = require("puppeteer-core");
 
-app.get("/api", async (req, res) => {
   try {
     // const browser = await puppeteer.launch({
     //   // args: chromium.args,
@@ -79,10 +78,19 @@ app.get("/api", async (req, res) => {
     console.error(err);
     return null;
   }
-});
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
-});
-
-module.exports = app;
+  module.exports = async (req, res) => {
+    if (!req.query.url) return res.status(400).send('No url query specified.');
+    if (!checkUrl(req.query.url))
+      return res.status(400).send('Invalid url query specified.');
+    try {
+      res.status(200).send(pageTitle);
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .send(
+          'The server encountered an error. You may have inputted an invalid query.'
+        );
+    }
+  };
